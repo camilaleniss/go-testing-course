@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Helloooo")
 	router := mux.NewRouter()
 
 	router.HandleFunc("/pokemon/{id}", controller.GetPokemon).Methods("GET")

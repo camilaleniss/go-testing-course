@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"catching-pokemons/models"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -28,8 +30,24 @@ func respondwithJSON(w http.ResponseWriter, code int, payload interface{}) {
 func GetPokemon(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	respondwithJSON(w, http.StatusOK, map[string]string{
-		"App": "Running",
-		"Id":  fmt.Sprintf("%s", id),
-	})
+	request := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", id)
+
+	response, err := http.Get(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var pokemon models.PokeApiPokemonResponse
+
+	err = json.Unmarshal(body, &pokemon)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	respondwithJSON(w, http.StatusOK, pokemon)
 }

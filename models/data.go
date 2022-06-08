@@ -8,7 +8,7 @@ type PokeApiPokemonResponse struct {
 }
 
 type PokemonType struct {
-	Slot    int      `json:"id"`
+	Slot    int      `json:"slot"`
 	RefType BaseName `json:"type"`
 }
 

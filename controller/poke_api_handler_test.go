@@ -25,3 +25,11 @@ func TestGetPokemonFromPokeApiSuccess(t *testing.T) {
 
 	c.Equal(expected, pokemon)
 }
+
+func TestGetPokemonFromPokeApiNotFound(t *testing.T) {
+	c := require.New(t)
+
+	_, err := GetPokemonFromPokeApi("aa")
+	c.NotNil(err)
+	c.EqualError(ErrPokemonNotFound, err.Error())
+}

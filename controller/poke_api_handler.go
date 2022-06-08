@@ -4,12 +4,18 @@ import (
 	"catching-pokemons/models"
 	"catching-pokemons/util"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+)
+
+var (
+	ErrPokemonNotFound = errors.New("pokemon not found")
+	ErrPokeApiFailure  = errors.New("unexpected response in Pokeapi")
 )
 
 // respondwithJSON write json response format
@@ -32,6 +38,14 @@ func GetPokemon(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	apiPokemon, err := GetPokemonFromPokeApi(id)
+	if errors.Is(err, ErrPokemonNotFound) {
+		respondwithJSON(w, http.StatusNotFound, fmt.Sprintf("error: %s", err.Error()))
+	}
+
+	if errors.Is(err, ErrPokeApiFailure) {
+		respondwithJSON(w, http.StatusInternalServerError, fmt.Sprintf("error: %s", err.Error()))
+	}
+
 	if err != nil {
 		respondwithJSON(w, http.StatusInternalServerError, fmt.Sprintf("error while calling PokeApi: %s", err.Error()))
 	}
@@ -50,6 +64,14 @@ func GetPokemonFromPokeApi(id string) (models.PokeApiPokemonResponse, error) {
 	response, err := http.Get(request)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if response.StatusCode == http.StatusNotFound {
+		return models.PokeApiPokemonResponse{}, ErrPokemonNotFound
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return models.PokeApiPokemonResponse{}, ErrPokeApiFailure
 	}
 
 	body, err := ioutil.ReadAll(response.Body)

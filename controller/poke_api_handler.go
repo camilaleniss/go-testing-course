@@ -31,6 +31,20 @@ func respondwithJSON(w http.ResponseWriter, code int, payload interface{}) {
 func GetPokemon(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
+	apiPokemon, err := GetPokemonFromPokeApi(id)
+	if err != nil {
+		respondwithJSON(w, http.StatusInternalServerError, fmt.Sprintf("error while calling PokeApi: %s", err.Error()))
+	}
+
+	parsedPokemon, err := util.ParsePokemon(apiPokemon)
+	if err != nil {
+		respondwithJSON(w, http.StatusInternalServerError, fmt.Sprintf("error found: %s", err.Error()))
+	}
+
+	respondwithJSON(w, http.StatusOK, parsedPokemon)
+}
+
+func GetPokemonFromPokeApi(id string) (models.PokeApiPokemonResponse, error) {
 	request := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", id)
 
 	response, err := http.Get(request)
@@ -47,13 +61,8 @@ func GetPokemon(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, &apiPokemon)
 	if err != nil {
-		log.Fatal(err)
+		return models.PokeApiPokemonResponse{}, err
 	}
 
-	parsedPokemon, err := util.ParsePokemon(apiPokemon)
-	if err != nil {
-		respondwithJSON(w, http.StatusInternalServerError, fmt.Sprintf("error found: %s", err.Error()))
-	}
-
-	respondwithJSON(w, http.StatusOK, parsedPokemon)
+	return apiPokemon, nil
 }

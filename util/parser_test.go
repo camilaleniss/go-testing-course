@@ -33,3 +33,21 @@ func TestParserSuccess(t *testing.T) {
 
 	c.Equal(expected, parsedPokemon)
 }
+
+func TestParserPokemonTypeNotFound(t *testing.T) {
+	c := require.New(t)
+
+	body, err := ioutil.ReadFile("samples/parsed_pokemon_response.json")
+	c.NoError(err)
+
+	var response models.PokeApiPokemonResponse
+
+	err = json.Unmarshal([]byte(body), &response)
+	c.NoError(err)
+
+	response.PokemonType = []models.PokemonType{}
+
+	_, err = ParsePokemon(response)
+	c.NotNil(err)
+	c.EqualError(ErrNotFoundPokemonType, err.Error())
+}
